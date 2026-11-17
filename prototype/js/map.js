@@ -388,8 +388,10 @@
   function resize(w, h, scale) {
     width = w;
     const dense = (window.devicePixelRatio || 1) * scale;       // screen pixels to one of the stage's
-    // In quarter steps, so dragging the window does not have the model remade at every size on the way.
-    const next = L.clamp(Math.ceil(dense * 4) / 4, 1, SHARP);
+    // As many pixels as the screen has for it and no more: every one drawn past that is shaded, and then thrown
+    // away when the canvas is scaled down to the screen. In twentieth steps, so dragging the window does not
+    // have the model remade at every size on the way.
+    const next = L.clamp(Math.round(dense * 20) / 20, 1, SHARP);
     // A contour is one of the stage's pixels wide, and no more than two of the screen's or so: on a large
     // screen the model is larger, and its lines should not thicken with it.
     const wide = Math.round(next * L.clamp(2 / dense, 0.75, 1) * 20) / 20;

@@ -28,6 +28,25 @@ export function createOpticalPanels(renderer) {
   const target=new T.WebGLRenderTarget(1,1,{type:T.HalfFloatType,samples:2});
   const resolution=new T.Vector2(1,1),background={value:target.texture};
   let meshes=[],materials=[];
+  // A finish is prepared once, however often the panels are bound again (overview.js binds after batching).
+  const prepared=new Map();
+  // For `draw`: the copy the panels see, and two full-screen sheets — one lays the picture into the copy, one
+  // lays it back where it was taken from. Both are drawn first, before anything else. The copy's depth is drawn
+  // again, not copied: a contour often lies a hair from the surface it runs along, and a copy of the depth, one
+  // value to a pixel, would let some through that were hidden.
+  const within=new T.WebGLRenderTarget(1,1,{type:T.HalfFloatType,samples:2}),tiny=new T.WebGLRenderTarget(1,1);
+  const kept={image:{value:null}},sheetVertex='varying vec2 vUv;void main(){vUv=uv;gl_Position=vec4(position.xy,0.,1.);}';
+  const sheet=material=>{const mesh=new T.Mesh(new T.PlaneGeometry(2,2),material);mesh.frustumCulled=false;mesh.renderOrder=-1e9;mesh.visible=false;return mesh;};
+  const copy=()=>sheet(new T.ShaderMaterial({uniforms:kept,vertexShader:sheetVertex,depthTest:false,depthWrite:false,blending:T.NoBlending,toneMapped:false,
+    fragmentShader:'uniform sampler2D image;varying vec2 vUv;void main(){gl_FragColor=texture2D(image,vUv);}'}));
+  const keep=copy(),resume=copy();
+  // Depth alone, cut where the finish is cut: what a finish leaves in the depth buffer, without its light.
+  const twins=new WeakMap(),twin=material=>{
+    let depth=twins.get(material);
+    if(!depth)twins.set(material,depth=new T.MeshBasicMaterial({colorWrite:false}));
+    Object.assign(depth,{side:material.side,depthTest:material.depthTest,depthFunc:material.depthFunc,clippingPlanes:material.clippingPlanes,clipIntersection:material.clipIntersection});
+    return depth;
+  };
   return {
     disable(){for(const entry of materials)entry.active.value=0;},
     bind(root){
@@ -35,8 +54,9 @@ export function createOpticalPanels(renderer) {
       root.traverse(mesh=>{
         if(!mesh.isMesh||mesh.material?.userData.opticalDensity===undefined)return;
         meshes.push(mesh);const material=mesh.material;if(seen.has(material))return;seen.add(material);
+        if(prepared.has(material)){materials.push({material,active:prepared.get(material)});return;}
         const active={value:0},prior=material.onBeforeCompile,priorKey=material.customProgramCacheKey.call(material);
-        materials.push({material,active});material.forceSinglePass=true;
+        materials.push({material,active});prepared.set(material,active);material.forceSinglePass=true;
         material.onBeforeCompile=shader=>{
           prior.call(material,shader);
           Object.assign(shader.uniforms,{panelBackground:background,panelResolution:{value:resolution},panelActive:active,panelDensity:{value:material.userData.opticalDensity}});
@@ -65,7 +85,7 @@ export function createOpticalPanels(renderer) {
         material.customProgramCacheKey=()=> `${priorKey}/optical-panels-v4`;material.needsUpdate=true;
       });
     },
-    setSize(w,h){target.setSize(w,h);resolution.set(w,h);},
+    setSize(w,h){target.setSize(w,h);within.setSize(w,h);resolution.set(w,h);},
     render(scene,camera){
       for(const entry of materials)entry.active.value=entry.material.opacity<.99?1:0;
       const hidden=meshes.filter(mesh=>mesh.visible&&mesh.material.opacity<.99);
@@ -78,6 +98,48 @@ export function createOpticalPanels(renderer) {
       background.value=target.texture;
       for(const mesh of hidden)mesh.visible=true;
       renderer.shadowMap.needsUpdate=shadowUpdate;
+    },
+    /**
+     * The whole scene into `picture`, the panels seeing through to it — without lighting the scene a second
+     * time for what is behind them. What a panel sees is the picture as it stands just before the panels are
+     * drawn, and whatever is drawn after them (contours, the cut, a host's overlays): so the picture is drawn
+     * up to the panels, kept, finished in the copy with what comes after them, and then taken up again. Says
+     * false, having drawn nothing, if no panel is see-through just now.
+     *
+     * Each render into a multisampled target ends by resolving it and letting its colour go (three.js keeps
+     * the depth), so the picture is taken up again by laying the resolved colour back first.
+     */
+    draw(scene,camera,picture){
+      const panels=[],early=[],late=[];
+      for(const entry of materials)entry.active.value=entry.material.opacity<.99?1:0;
+      const panel=new Set(meshes);
+      (function walk(object){
+        if(!object.visible)return;
+        if(object.isMesh||object.isLine||object.isPoints){
+          if(panel.has(object))(object.material.opacity<.99?panels:early).push(object);
+          else (object.material.transparent&&object.renderOrder>=7?late:early).push(object);  // drawn after the panels (renderOrder 6)
+        }
+        for(const child of object.children)walk(child);
+      })(scene);
+      if(!panels.length)return false;
+      if(keep.parent!==scene)scene.add(keep,resume);
+      const show=(list,on)=>{for(const object of list)object.visible=on;},clear=renderer.autoClear;
+      // Shadows are cast by everything, panels too: if they are due, they are drawn now, with all of it in place.
+      if(renderer.shadowMap.needsUpdate){renderer.setRenderTarget(tiny);renderer.render(scene,camera);}
+      const shadowUpdate=renderer.shadowMap.needsUpdate;renderer.shadowMap.needsUpdate=false;
+      background.value=null;show(panels,false);show(late,false);
+      renderer.setRenderTarget(picture);renderer.render(scene,camera);
+      kept.image.value=picture.texture;
+      // The copy: that picture, the depth of what made it, and what is drawn after the panels.
+      const solid=early.filter(object=>object.isMesh&&object.material.depthWrite),finishes=solid.map(object=>object.material);
+      show(early,false);show(solid,true);solid.forEach(object=>{object.material=twin(object.material);});show(late,true);keep.visible=true;
+      renderer.setRenderTarget(within);renderer.render(scene,camera);
+      solid.forEach((object,i)=>{object.material=finishes[i];});
+      keep.visible=false;show(solid,false);background.value=within.texture;show(panels,true);resume.visible=true;
+      renderer.autoClear=false;renderer.setRenderTarget(picture);renderer.render(scene,camera);renderer.autoClear=clear;
+      resume.visible=false;show(early,true);
+      renderer.shadowMap.needsUpdate=shadowUpdate;
+      return true;
     },
   };
 }
@@ -146,12 +208,13 @@ export function createPresentation(renderer) {
     },
     // `bloom` is the presentation look: light spreads and colour is full. Without it the model is a clean drawing.
     // `open` leaves the picture clear wherever nothing was drawn, for a canvas that stands in front of a page.
-    render(world,view,{bloom=true,open=false}={}){
+    // `panels` (createOpticalPanels) draws the scene itself, its panels seeing through to the picture as it is drawn.
+    render(world,view,{bloom=true,open=false,panels=null}={}){
       compose.uniforms.open.value=open?1:0;
       compose.uniforms.inverseProjection.value.copy(view.projectionMatrixInverse);compose.uniforms.projectionScale.value.set(view.projectionMatrix.elements[0],view.projectionMatrix.elements[5]);compose.uniforms.perspective.value=view.isPerspectiveCamera?1:0;
       const distance=view.position.length();compose.uniforms.hazeRange.value.set(view.isPerspectiveCamera?1:Math.max(1,distance-7),view.isPerspectiveCamera?9:distance+7);compose.uniforms.hazeStrength.value=bloom?.05:0;
       compose.uniforms.saturation.value=bloom?1:.94;compose.uniforms.spread.value.fromArray(bloom?SPREAD:[0,0,0,0]);
-      renderer.setRenderTarget(sceneTarget);renderer.render(world,view);
+      if(!panels?.draw(world,view,sceneTarget)){renderer.setRenderTarget(sceneTarget);renderer.render(world,view);}
       if(bloom)spreadLight();
       draw(compose,null);
     },
@@ -164,14 +227,23 @@ export function createFloorReflection(renderer) {
   const matrix=new T.Matrix4(),clip=new T.Plane(new T.Vector3(0,1,0),-.018);
   const ortho=new T.OrthographicCamera(),perspective=new T.PerspectiveCamera();
   const bias=new T.Matrix4().set(.5,0,0,.5,0,.5,0,.5,0,0,.5,.5,0,0,0,1),sampler={value:target.texture};
-  return {
+  /** The camera the floor is seen in: `camera` turned over the floor's plane. */
+  function reflect(camera){
+    const mirror=camera.isPerspectiveCamera?perspective:ortho;mirror.copy(camera,false);
+    const direction=camera.getWorldDirection(new T.Vector3());direction.y*=-1;
+    mirror.position.y=-camera.position.y;mirror.up.copy(camera.up);mirror.up.y*=-1;
+    mirror.lookAt(mirror.position.clone().add(direction));mirror.updateMatrixWorld();
+    if(reflection.layer!==null)mirror.layers.set(reflection.layer);
+    return mirror;
+  }
+  const reflection={
     texture:target.texture,sampler,matrix,
+    /** A layer of its own to draw, for a host that builds the reflected picture separately (overview.js); null: the camera's. */
+    layer:null,
+    reflect,
     setSize(w,h){target.setSize(Math.max(1,Math.round(w/2)),Math.max(1,Math.round(h/2)));},
     render(scene,camera){
-      const mirror=camera.isPerspectiveCamera?perspective:ortho;mirror.copy(camera,false);
-      const direction=camera.getWorldDirection(new T.Vector3());direction.y*=-1;
-      mirror.position.y=-camera.position.y;mirror.up.copy(camera.up);mirror.up.y*=-1;
-      mirror.lookAt(mirror.position.clone().add(direction));mirror.updateMatrixWorld();
+      const mirror=reflect(camera);
       matrix.copy(bias).multiply(mirror.projectionMatrix).multiply(mirror.matrixWorldInverse);
       const prior=renderer.clippingPlanes,shadowUpdate=renderer.shadowMap.needsUpdate;
       renderer.clippingPlanes=[clip];renderer.shadowMap.needsUpdate=false;
@@ -180,6 +252,7 @@ export function createFloorReflection(renderer) {
       renderer.clippingPlanes=prior;renderer.shadowMap.needsUpdate=shadowUpdate;renderer.setRenderTarget(null);
     },
   };
+  return reflection;
 }
 
 export function addFloorReflection(material,reflection) {

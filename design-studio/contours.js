@@ -73,6 +73,8 @@ export function createContourMaterial(tone) {
       }`,
   });
   material.userData.contour=true;
+  // Light is only added, so the two faces need not be drawn one after the other: one call, not two, per contour.
+  material.forceSinglePass=true;
   return material;
 }
 
@@ -126,6 +128,32 @@ function contourGeometry(segments) {
   }
   const center=bounds.getCenter(new T.Vector3());
   for(let i=0;i<count;i++)center.toArray(centers,i*3);
+  return segmentGeometry(start,end,weight,centers,bounds);
+}
+
+/**
+ * Several contours as one, for a picture whose contours no longer move (batching.js): every segment carried
+ * into world space with its own object's placement. Each keeps the centre its outward was measured from, so
+ * an edge is as clear or as faint as it was.
+ */
+export function mergeContours(contours) {
+  const count=contours.reduce((n,contour)=>n+contour.geometry.instanceCount,0);
+  const start=new Float32Array(count*3),end=new Float32Array(count*3),weight=new Float32Array(count),centers=new Float32Array(count*3);
+  const bounds=new T.Box3(),point=new T.Vector3();let i=0;
+  for(const contour of contours){
+    const {segmentStart,segmentEnd,segmentWeight,contourCenter}=contour.geometry.attributes,matrix=contour.matrixWorld;
+    for(let k=0;k<contour.geometry.instanceCount;k++,i++){
+      point.fromBufferAttribute(segmentStart,k).applyMatrix4(matrix);point.toArray(start,i*3);bounds.expandByPoint(point);
+      point.fromBufferAttribute(segmentEnd,k).applyMatrix4(matrix);point.toArray(end,i*3);bounds.expandByPoint(point);
+      point.fromBufferAttribute(contourCenter,k).applyMatrix4(matrix);point.toArray(centers,i*3);
+      weight[i]=segmentWeight.getX(k);
+    }
+  }
+  return segmentGeometry(start,end,weight,centers,bounds);
+}
+
+function segmentGeometry(start,end,weight,centers,bounds) {
+  const count=weight.length;
   const geometry=new T.InstancedBufferGeometry();
   geometry.setAttribute('position',new T.Float32BufferAttribute(QUAD,3));geometry.setIndex([0,1,2,0,2,3]);
   geometry.setAttribute('segmentStart',new T.InstancedBufferAttribute(start,3));

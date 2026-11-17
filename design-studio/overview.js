@@ -2,6 +2,7 @@ import * as T from './vendor/three.module.js';
 import { createFacility } from './model.js';
 import { createContourMaterial, createContour, setContourCenter, tuneContours, cutTop } from './contours.js';
 import { createPresentation, createFloorReflection, addFloorReflection, createOpticalPanels, createLighting } from './rendering.js';
+import { batchStill } from './batching.js';
 import { DEFAULTS, ROOMS, SITE } from './space.mjs';
 
 /* The overview, for another page to show.
@@ -62,19 +63,6 @@ export function createOverview(canvas,{parameters=DEFAULTS,margin=[40,40,40,40]}
     item.cap.visible=height>item.source.position.y-half&&height<item.source.position.y+half;item.cap.position.y=height+.002;
   }
 
-  // The room being looked at: its outline on its own floor, in light, seen through whatever stands in front.
-  const marks=new Map(),middles=new Map(),volumes=new Map();
-  for(const room of ROOMS){
-    const [x1,z1,x2,z2]=room.bounds,floor=room.id==='office'?m.office:room.id==='habitat'?m.water:0,y=floor+(floor?.02:.035);
-    const material=createContourMaterial('cyan');material.depthTest=false;
-    const outline=createContour([[x1,z1],[x2,z1],[x2,z2],[x1,z2]].flatMap((p,i,all)=>[p[0],y,p[1],all[(i+1)%4][0],y,all[(i+1)%4][1],1]),material);
-    // Every side of it is toward the eye.
-    setContourCenter(outline,[-POSITION[0]*20,-POSITION[1]*20,-POSITION[2]*20]);
-    outline.renderOrder=9;outline.visible=false;scene.add(outline);marks.set(room.id,outline);
-    middles.set(room.id,new T.Vector3((x1+x2)/2,floor,(z1+z2)/2));
-    volumes.set(room.id,new T.Box3(new T.Vector3(x1,EXTENT[0][1]+.16,z1),new T.Vector3(x2,EXTENT[1][1],z2)));
-  }
-
   /* The camera. It looks at one point of the building from a fixed distance; `lean` turns it about that
      point by a few degrees; its window is set so the model sits where the host wants it, and is drawn in
      and moved toward a room while that room is looked at closely. Asked for, then eased to.              */
@@ -99,6 +87,45 @@ export function createOverview(canvas,{parameters=DEFAULTS,margin=[40,40,40,40]}
   const low=[Infinity,Infinity],high=[-Infinity,-Infinity],corner=new T.Vector3();
   for(const x of [0,1])for(const y of [0,1])for(const z of [0,1]){
     across(corner.set(EXTENT[x][0],EXTENT[y][1],EXTENT[z][2])).forEach((v,i)=>{low[i]=Math.min(low[i],v);high[i]=Math.max(high[i],v);});
+  }
+
+  /* From here on the model holds still — only light and water move in it — so it is drawn in as few calls as
+     it can be (batching.js), in the order it was always drawn in. The floor's reflection has a copy of its
+     own, holding only what can be seen in it: the mirrored view looks up and away from the camera's side, so
+     a thing is seen in a polished floor only if it stands above that floor's plane and on that far side of
+     some part of it, however the view leans.                                                                 */
+  const polished=facility.root.getObjectByName('living-floor').material,mirrors=[];
+  facility.root.traverse(o=>{if(o.isMesh&&o.visible&&o.material===polished)mirrors.push(new T.Box3().setFromObject(o));});
+  const looks=[[0,0],[1,1],[1,-1],[-1,1],[-1,-1]].map(([x,y])=>{
+    const eye=new T.Vector3().setFromSphericalCoords(reach.radius,reach.phi+y*.035,reach.theta+x*.075);
+    return new T.Vector3(-eye.x,eye.y,-eye.z);                  // from the floor toward what it shows: the view, turned over
+  });
+  const toward=(d,low,high,from,to)=>d>1e-6?high>=from-.1:d<-1e-6?low<=to+.1:high>=from-.1&&low<=to+.1;
+  const reflected=box=>box.max.y>.018&&mirrors.some(f=>looks.some(d=>toward(d.x,box.min.x,box.max.x,f.min.x,f.max.x)&&toward(d.z,box.min.z,box.max.z,f.min.z,f.max.z)));
+  // The view as far as it can lean each way: things that never share a pixel from any of these may be drawn in any order.
+  const leaning=[[1,1],[1,-1],[-1,1],[-1,-1]].map(([x,y])=>{
+    const view=camera.clone();view.position.setFromSphericalCoords(reach.radius,reach.phi+y*.035,reach.theta+x*.075).add(target);
+    view.lookAt(target);view.updateMatrixWorld();return view;
+  });
+  const batched=batchStill(scene,[
+    {camera,poses:leaning,margin:.03,layer:0},
+    {camera:floorReflection.reflect(camera).clone(),poses:leaning.map(view=>floorReflection.reflect(view).clone()),margin:.03,layer:1,include:reflected},
+  ],facility.root);
+  floorReflection.layer=1;
+  scene.traverse(object=>{if(object.isLight)object.layers.enable(1);});
+  opticalPanels.bind(facility.root);
+
+  // The room being looked at: its outline on its own floor, in light, seen through whatever stands in front.
+  const marks=new Map(),middles=new Map(),volumes=new Map();
+  for(const room of ROOMS){
+    const [x1,z1,x2,z2]=room.bounds,floor=room.id==='office'?m.office:room.id==='habitat'?m.water:0,y=floor+(floor?.02:.035);
+    const material=createContourMaterial('cyan');material.depthTest=false;
+    const outline=createContour([[x1,z1],[x2,z1],[x2,z2],[x1,z2]].flatMap((p,i,all)=>[p[0],y,p[1],all[(i+1)%4][0],y,all[(i+1)%4][1],1]),material);
+    // Every side of it is toward the eye.
+    setContourCenter(outline,[-POSITION[0]*20,-POSITION[1]*20,-POSITION[2]*20]);
+    outline.renderOrder=9;outline.visible=false;outline.layers.enable(1);scene.add(outline);marks.set(room.id,outline);
+    middles.set(room.id,new T.Vector3((x1+x2)/2,floor,(z1+z2)/2));
+    volumes.set(room.id,new T.Box3(new T.Vector3(x1,EXTENT[0][1]+.16,z1),new T.Vector3(x2,EXTENT[1][1],z2)));
   }
   function resize(width,height,ratio=1,line=ratio){
     Object.assign(size,{w:width,h:height,ratio});
@@ -141,6 +168,20 @@ export function createOverview(canvas,{parameters=DEFAULTS,margin=[40,40,40,40]}
   floors.push({room:'habitat',water:true,x:facility.water.position.x,y:m.water,z:facility.water.position.z,w:pool.width,d:pool.depth});
   const sized=new Set();
 
+  /* What a polished floor shows stands still: the water is under the floor's plane, and nothing that moves is
+     above it. So the reflection is drawn again only when the view, the canvas or a room's outline has changed —
+     or every time while a host's own things are shown, since those may move.                               */
+  const hosts=[],shadowsOnly=new T.WebGLRenderTarget(1,1);let reflectedFor='';
+  function reflectionDue(){
+    if(hosts.some(object=>object.visible))return true;
+    let key=`${size.w}x${size.h}@${size.ratio}`;
+    for(const v of camera.matrixWorld.elements)key+=`,${v}`;
+    for(const v of camera.projectionMatrix.elements)key+=`,${v}`;
+    for(const outline of marks.values())key+=outline.visible?`|${outline.material.uniforms.contourOpacity.value}`:'|-';
+    if(key===reflectedFor)return false;
+    reflectedFor=key;return true;
+  }
+
   const raycaster=new T.Raycaster(),spot=new T.Vector2();
   return {
     rooms:ROOMS.map(({id,number,name,en,area,bounds})=>({id,number,name,en,area,bounds})),
@@ -149,7 +190,9 @@ export function createOverview(canvas,{parameters=DEFAULTS,margin=[40,40,40,40]}
     her:[facility.target.x,m.water-.48,facility.target.z],
     /** Put something of the host's own into the picture. `sized`, if given, is told the canvas's size in its own pixels, now and whenever it changes. */
     add(object,onSize){
-      scene.add(object);
+      // Seen by the camera and in the polished floor, as everything was before the floor had a copy of its own.
+      object.traverse(part=>part.layers.enable(1));
+      scene.add(object);hosts.push(object);
       if(onSize){sized.add(onSize);if(size.w>1)onSize(Math.round(size.w*size.ratio),Math.round(size.h*size.ratio),size.ratio);}
       return object;
     },
@@ -185,9 +228,12 @@ export function createOverview(canvas,{parameters=DEFAULTS,margin=[40,40,40,40]}
     /** Draw. Give the time, in seconds, for the water to move; leave it out to hold it still. */
     render(seconds){
       if(seconds!==undefined)facility.animate(seconds);
-      opticalPanels.disable();floorReflection.render(scene,camera);opticalPanels.render(scene,camera);
-      presentation.render(scene,camera,{bloom:true,open:true});
+      // Shadows first, when they are due (after a resize): the reflection is kept, and must not be kept without them.
+      if(renderer.shadowMap.needsUpdate){renderer.setRenderTarget(shadowsOnly);renderer.render(scene,camera);renderer.setRenderTarget(null);}
+      opticalPanels.disable();
+      if(reflectionDue())floorReflection.render(scene,camera);
+      presentation.render(scene,camera,{bloom:true,open:true,panels:opticalPanels});
     },
-    dispose(){facility.dispose();lighting.dispose();for(const outline of marks.values()){outline.geometry.dispose();outline.material.dispose();}renderer.dispose();},
+    dispose(){facility.dispose();lighting.dispose();for(const geometry of batched)geometry.dispose();for(const outline of marks.values()){outline.geometry.dispose();outline.material.dispose();}renderer.dispose();},
   };
 }
