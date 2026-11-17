@@ -1,0 +1,396 @@
+/* The system sheet.
+
+   What opening it does to the rest of the stage is in modes.css. This file
+   is the sheet itself, and it keeps the three depths of hud.css:
+
+   1 · Printed (title, section rules, row names, readings, the thread the page
+       bubbles hang on): type and hairlines, no surface of their own.
+   2 · Film (the sheet, and the tongue it puts out to the chosen page): a
+       vesicle spread wide. Its faces are built by system.js, one per page,
+       and cross-fade; like every glass surface they fade as body and light,
+       never through an ancestor.
+   3 · In reach (the page bubbles, the drop on each level): the only things
+       here that stand proud.
+
+   The water in a level is her water, and is the only colour on the sheet.   */
+
+/* ── 1 · Printed ──────────────────────────────────────── */
+
+.sys-etch {
+  opacity: 0;
+}
+
+.stage[data-mode="system"] .sys-etch {
+  opacity: 1;
+}
+
+.sys-thread {
+  stroke-width: 1;
+}
+
+/* The box is the film and the room to its left for the page bubbles
+   (shapes.js). Most of it is bare pane, so only what is on it takes the
+   pointer. */
+.sheet {
+  left: 40px;
+  top: 172px;
+  width: 972px;
+  height: 632px;
+  pointer-events: none;
+  visibility: hidden;
+  translate: -18px 6px;
+  transition: translate 1s var(--ease), visibility 0s linear 0.8s;
+}
+
+.stage[data-mode="system"] .sheet {
+  visibility: visible;
+  translate: 0 0;
+  transition: translate 1s var(--ease), visibility 0s;
+}
+
+/* A touch on the film is not a knock on the glass. */
+.sheet__hit {
+  position: absolute;
+  left: 222px;
+  top: 22px;
+  right: 8px;
+  bottom: 16px;
+  border-radius: 64px;
+  pointer-events: auto;
+}
+
+.sheet__head,
+.sheet__pages,
+.nav__label {
+  opacity: 0;
+  transition: opacity 0.6s var(--ease);
+}
+
+.stage[data-mode="system"] .sheet__head,
+.stage[data-mode="system"] .sheet__pages,
+.stage[data-mode="system"] .nav__label {
+  opacity: 1;
+  transition: opacity 0.9s var(--ease) 0.25s;
+}
+
+.sheet__head {
+  left: 300px;
+  top: 58px;
+}
+
+.sheet__pages {
+  position: absolute;
+  left: 300px;
+  top: 142px;
+  width: 626px;
+  pointer-events: auto;
+}
+
+.page {
+  position: absolute;
+  inset: 0 0 auto 0;
+  opacity: 0;
+  visibility: hidden;
+  translate: 0 8px;
+  transition: opacity 0.35s var(--ease), translate 0.35s var(--ease), visibility 0s linear 0.35s;
+}
+
+.page.is-on {
+  opacity: 1;
+  visibility: visible;
+  translate: 0 0;
+  transition: opacity 0.6s var(--ease) 0.18s, translate 0.6s var(--ease) 0.18s, visibility 0s;
+}
+
+/* The pages are on the sheet. While the sheet is away the one that is on is
+   no more there than the rest: left visible, it would lie unseen across the
+   middle of the pane and take every touch meant for what is behind it. */
+.stage:not([data-mode="system"]) .page.is-on {
+  visibility: hidden;
+  pointer-events: none;
+  transition: visibility 0s linear 0.8s;
+}
+
+.sect {
+  margin: 22px 0 0;
+  height: 26px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  font-weight: 400;
+  white-space: nowrap;
+}
+
+.sect:first-child {
+  margin-top: 0;
+}
+
+.sect b {
+  font-size: var(--type-note);
+  font-weight: 400;
+  letter-spacing: 0.3em;
+  color: var(--ice-2);
+}
+
+.sect i {
+  font-style: normal;
+  font-size: var(--type-caption);
+  font-weight: 500;
+  letter-spacing: 0.32em;
+  color: var(--ice-3);
+}
+
+.sect::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  margin-left: 6px;
+  background: linear-gradient(90deg, var(--ice-4), transparent 92%);
+}
+
+.row {
+  height: 54px;
+  display: grid;
+  grid-template-columns: 22px 122px 372px 1fr;
+  column-gap: 16px;
+  align-items: center;
+}
+
+.row__mark {
+  width: 22px;
+  height: 22px;
+  fill: none;
+  stroke: var(--ice-2);
+  stroke-width: 1.2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.row__name {
+  font-size: var(--type-row);
+  letter-spacing: 0.14em;
+  white-space: nowrap;
+}
+
+.row__value {
+  justify-self: end;
+  display: flex;
+  align-items: baseline;
+  gap: 3px;
+  white-space: nowrap;
+}
+
+.row__value b {
+  font-size: 17px;
+  font-weight: 300;
+  letter-spacing: 0.06em;
+}
+
+.row__value i {
+  font-style: normal;
+  font-size: 9.5px;
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  color: var(--ice-2);
+}
+
+.row__note {
+  grid-column: 3 / 5;
+  margin: 0;
+  font-size: 10.5px;
+  font-weight: 500;
+  letter-spacing: 0.24em;
+  color: var(--ice-2);
+  white-space: nowrap;
+}
+
+/* The names of the pages, beside their bubbles. The chosen one lies in the
+   tongue of the film; the others are printed on bare glass, so each has a
+   breath of shade behind it and no more. */
+.nav__label {
+  position: absolute;
+  translate: 0 -50%;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  white-space: nowrap;
+  color: var(--ice-3);
+  cursor: pointer;
+  pointer-events: auto;
+}
+
+.nav__label::before {
+  content: "";
+  position: absolute;
+  inset: -16px -22px -16px -14px;
+  background: radial-gradient(closest-side, rgba(3, 18, 30, 0.4), transparent);
+  transition: opacity 0.5s var(--ease);
+}
+
+.nav__label b,
+.nav__label i {
+  position: relative;
+  transition: color 0.5s var(--ease);
+}
+
+.nav__label b {
+  font-size: var(--type-row);
+  font-weight: 400;
+  letter-spacing: 0.24em;
+  line-height: 1;
+  color: var(--ice-2);
+}
+
+.nav__label i {
+  font-style: normal;
+  font-size: var(--type-caption);
+  font-weight: 500;
+  letter-spacing: 0.3em;
+  line-height: 1;
+}
+
+.nav__label:hover b,
+.nav__label.is-active b {
+  color: var(--ice);
+}
+
+.nav__label.is-active i {
+  color: var(--ice-2);
+}
+
+.nav__label.is-active::before {
+  opacity: 0;
+}
+
+/* ── 2 · Film ─────────────────────────────────────────── */
+
+/* Dark and clear, as the speech sheet is: it dims the water rather than
+   fogging it, most where the light comes in and the title sits, least toward
+   the far edge, where the film thins and she shows through. */
+.sheet > .glass__body {
+  background:
+    radial-gradient(64% 80% at 20% 0%, rgba(150, 220, 245, 0.09), transparent 62%),
+    linear-gradient(96deg, rgba(4, 28, 48, 0.66) 24%, rgba(3, 23, 41, 0.56) 66%, rgba(3, 20, 36, 0.44) 100%);
+  /* The film itself thins toward the corner furthest from the light. */
+  -webkit-mask-image: linear-gradient(128deg, #000 56%, rgba(0, 0, 0, 0.36) 96%);
+          mask-image: linear-gradient(128deg, #000 56%, rgba(0, 0, 0, 0.36) 96%);
+}
+
+.sheet > .glass__body,
+.sheet > .glass__light {
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.55s var(--ease), visibility 0s linear 0.55s;
+}
+
+.stage[data-mode="system"] .sheet > .is-on {
+  opacity: 1;
+  visibility: visible;
+  transition: opacity 0.55s var(--ease), visibility 0s;
+}
+
+/* A choice on the sheet (modes.css) has nothing behind it but the film, so
+   it has no lens: only a little more depth than the film around it, and its
+   edge. */
+.row__ctl {
+  position: relative;
+  height: 46px;
+}
+
+.row__ctl .lobes > .glass__body {
+  -webkit-backdrop-filter: none;
+          backdrop-filter: none;
+  background: linear-gradient(180deg, rgba(150, 220, 245, 0.05), rgba(1, 12, 24, 0.34));
+}
+
+/* ── 3 · In reach ─────────────────────────────────────── */
+
+/* The page bubbles: the care bubbles' kin, a size down. The chosen one sits
+   in the cup at the end of the tongue; the others hang on the thread. */
+.nav {
+  --bob: 0s;
+}
+
+.nav > .glass__body,
+.nav > .glass__light {
+  opacity: 0;
+  transition-delay: 0s;
+}
+
+.stage[data-mode="system"] .nav > .glass__body,
+.stage[data-mode="system"] .nav > .glass__light {
+  opacity: 1;
+  transition-delay: calc(0.1s + var(--i) * 0.07s);
+}
+
+.nav .bubble__icon {
+  width: 52px;
+  height: 52px;
+  margin: -26px;
+  stroke-width: 1.6;
+  opacity: 0;
+  filter: drop-shadow(0 0 4px rgba(var(--cyan-rgb), 0.5));
+  transition: opacity 0.6s var(--ease), filter 0.6s var(--ease);
+}
+
+.stage[data-mode="system"] .nav .bubble__icon {
+  opacity: 0.56;
+}
+
+.stage[data-mode="system"] .nav:hover .bubble__icon {
+  opacity: 0.84;
+}
+
+.stage[data-mode="system"] .nav.is-active .bubble__icon {
+  opacity: 1;
+  filter: drop-shadow(0 0 7px rgba(var(--cyan-rgb), 0.95));
+}
+
+/* A level: the channel is drawn by liquid.js; the drop rides its front. */
+.level {
+  position: relative;
+  width: 372px;
+  height: 30px;
+  cursor: grab;
+  touch-action: none;
+}
+
+.level.is-held {
+  cursor: grabbing;
+}
+
+/* Easier to take hold of than a channel thirteen pixels across. */
+.level::before {
+  content: "";
+  position: absolute;
+  inset: -12px -4px;
+}
+
+.level__liquid {
+  position: absolute;
+  left: 0;
+  top: 0;
+  display: block;
+  filter: drop-shadow(0 0 5px rgba(var(--mint-rgb), 0.26));
+}
+
+.level__thumb {
+  left: 0;
+  top: 0;
+  pointer-events: none;
+  transform-origin: 13px 20px;
+  transition: scale 0.3s var(--ease);
+}
+
+.level__thumb > .glass__body {
+  background: radial-gradient(circle at 42% 34%, rgba(236, 252, 255, 0.5), rgba(var(--mint-rgb), 0.26) 58%, rgba(10, 70, 92, 0.3));
+}
+
+.level:hover .level__thumb,
+.level:focus-visible .level__thumb {
+  scale: 1.16;
+}
+
+.level.is-held .level__thumb {
+  scale: 1.28;
+}

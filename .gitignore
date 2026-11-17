@@ -1,0 +1,11 @@
+# Koma 运行时文件（由 Koma 生成或管理，见 PROTOCOL.md）
+state.live.json
+PROTOCOL.md
+draft.inbox.json
+live/
+assets/
+slates/
+
+# 本机文件
+.DS_Store
+.claude/settings.local.json

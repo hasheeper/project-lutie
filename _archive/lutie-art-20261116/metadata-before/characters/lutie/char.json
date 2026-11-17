@@ -1,0 +1,29 @@
+{
+  "name": "露缇",
+  "aliases": [
+    "Lutie",
+    "露缇（Lutie）"
+  ],
+  "brief": "诺伦斯生物研究所照料的幽影水凝体特殊智慧个体。温柔好奇，依赖熟悉环境；蓝色凝胶身体、蓝眼、长发与大型水母伞帽，散发蓝绿色荧光。",
+  "profile": "profile.md",
+  "portrait": "portrait.jpg",
+  "tags": {
+    "prompt": "1girl, monster_girl, colored skin, core, blue eyes, blue skin, shiny skin, slime girl, 1.1::jellyfish::, blue glow, long hair, big hat, long bangs, 1.21::translucent jellyfish cap, translucent gel hair, translucent gel arms::, tareme, slime_musume",
+    "negative": "nudity, see-through clothes, transparent clothing, exposed torso, exposed chest, exposed crotch",
+    "outfits": [
+      {
+        "id": "default",
+        "label": "凝胶裙装",
+        "prompt": "impossible_dress, opaque white dress, flowing gel skirt, fully covered torso",
+        "negative": ""
+      }
+    ]
+  },
+  "refs": [
+    {
+      "file": "refs/blue-glow.png",
+      "title": "蓝光参考",
+      "description": "参考水母伞帽、凝胶发丝、蓝眼与蓝色荧光。"
+    }
+  ]
+}

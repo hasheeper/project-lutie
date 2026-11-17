@@ -1,0 +1,1069 @@
+/* Instruments.
+
+   Not everything is a card. Each instrument belongs to one of three depths,
+   and how it is made follows from where it sits:
+
+   1 · Printed on the pane (.imprint) — the humidity scale and the subject's
+       name. No surface, no outline; hairlines and type that follow the curve
+       of the port and fade out toward the water. Under the hull in paint order.
+   2 · Gathered in the corners (first .hud__layer) — vesicles of clear liquid,
+       each one body holding several organs. They lie across the edge of the
+       hull, so they read as nearer than it.
+   3 · In reach (second .hud__layer) — the three bubbles, the crystal, the
+       sheet she speaks on. Nearest the eye, and the only things that swell.
+
+   Liquid surfaces share one recipe (.glass, built by glass.js from shapes.js).
+   A widget never fades as a whole — an opacity, filter or clip on its root
+   would cut the glass off from what is behind it — only its contents do.      */
+
+.hud,
+.hud__layer,
+.imprint,
+.w-actions {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.w {
+  position: absolute;
+  pointer-events: auto;
+  color: var(--ice);
+}
+
+.hud button {
+  appearance: none;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.hud :focus {
+  outline: none;
+}
+
+.label {
+  font-size: 9.5px;
+  font-weight: 500;
+  letter-spacing: var(--track-wide);
+  text-transform: uppercase;
+  color: var(--ice-2);
+}
+
+.num {
+  font-weight: 300;
+  font-variant-numeric: tabular-nums;
+}
+
+[data-human],
+[data-sense] {
+  transition: opacity 0.8s var(--ease), filter 0.8s var(--ease);
+}
+
+[data-sense] {
+  opacity: 0;
+}
+
+/* ── Liquid glass ─────────────────────────────────────── */
+
+.glass {
+  position: absolute;
+}
+
+/* Clear in the middle: only a trace of tint, so it still reads against bright water.
+   The backdrop filter here is the fallback; where refraction is available,
+   glass.js replaces it with the shape's own lens. */
+.glass__body {
+  position: absolute;
+  -webkit-backdrop-filter: blur(4px) saturate(1.3) brightness(1.08);
+          backdrop-filter: blur(4px) saturate(1.3) brightness(1.08);
+  background:
+    radial-gradient(120% 90% at 18% 0%, rgba(214, 246, 255, 0.1), transparent 60%),
+    linear-gradient(180deg, rgba(140, 214, 236, 0.05), rgba(6, 40, 62, 0.18));
+  transition: background 1s var(--ease), opacity 1s var(--ease);
+}
+
+.glass__light {
+  position: absolute;
+  pointer-events: none;
+  transition: opacity 0.9s var(--ease);
+}
+
+/* ── 1 · Printed on the pane ──────────────────────────── */
+
+.etch {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  transition: opacity 0.9s var(--ease);
+}
+
+.etch path {
+  fill: none;
+}
+
+/* The pane is thick: its near and far faces each return a faint line of sky. */
+.etch__dome {
+  stroke-width: 1.2;
+}
+
+.etch__dome + .etch__dome {
+  stroke-width: 0.6;
+}
+
+.ruler__spine {
+  stroke-width: 1;
+}
+
+.ruler__ticks {
+  stroke: var(--ice-3);
+  stroke-width: 1;
+}
+
+.ruler__ticks--major {
+  stroke: var(--ice-2);
+}
+
+.ruler__end {
+  fill: var(--ice-2);
+}
+
+.ruler__marker.is-live {
+  transition: transform 1.6s var(--ease);
+}
+
+.ruler__marker circle {
+  fill: var(--mint);
+  filter: drop-shadow(0 0 5px rgba(var(--mint-rgb), 1));
+}
+
+.ruler__marker path {
+  stroke: rgba(var(--mint-rgb), 0.7);
+  stroke-width: 1;
+}
+
+.ruler__marker text {
+  fill: var(--ice);
+  font-family: var(--font-label);
+  font-size: 12px;
+  font-weight: 300;
+  letter-spacing: 0.08em;
+  font-variant-numeric: tabular-nums;
+}
+
+.ruler__marker .ruler__unit {
+  fill: var(--ice-3);
+  font-size: 7.5px;
+  font-weight: 500;
+  letter-spacing: 0.2em;
+}
+
+/* The subject's name: a specimen label, not a button. It has no edge of its own;
+   the scale's spine turns under it as its rule, and the text thins out to the right.
+   Placed by hud.js where that rule lands. */
+.plate {
+  position: absolute;
+  width: 262px;
+  height: 96px;
+}
+
+/* A breath of shade so the type holds against bright water. No shape to it. */
+.plate::before {
+  content: "";
+  position: absolute;
+  inset: -26px -20px -22px -34px;
+  background: radial-gradient(58% 62% at 34% 52%, rgba(3, 18, 30, 0.36), rgba(3, 18, 30, 0.12) 60%, transparent 78%);
+}
+
+/* The jellyfish is a mark of light, in whatever colour she feels. */
+.plate__mark {
+  position: absolute;
+  left: 0;
+  top: 2px;
+  width: 46px;
+  height: 52px;
+  overflow: visible;
+  fill: none;
+  stroke: rgb(var(--mood-rgb));
+  stroke-width: 1.1;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  filter: drop-shadow(0 0 5px rgba(var(--mood-rgb), 0.8));
+  animation: glow 5.6s ease-in-out infinite;
+  transition: stroke 0.9s var(--ease);
+}
+
+.plate__canal {
+  stroke-width: 0.8;
+  opacity: 0.55;
+}
+
+.plate__text {
+  position: absolute;
+  left: 60px;
+  top: 30px;
+  width: 202px;
+  white-space: nowrap;
+  -webkit-mask-image: linear-gradient(90deg, #000 46%, transparent 100%);
+          mask-image: linear-gradient(90deg, #000 46%, transparent 100%);
+}
+
+.plate__text strong {
+  display: block;
+  font-size: 17px;
+  font-weight: 400;
+  letter-spacing: 0.34em;
+  line-height: 17px;
+}
+
+.plate__text span {
+  display: block;
+  font-size: 7.5px;
+  font-weight: 500;
+  letter-spacing: 0.15em;
+  line-height: 13px;
+  color: var(--ice-2);
+}
+
+.plate__text strong + span {
+  margin-top: 18px;
+}
+
+@keyframes glow {
+  0%, 100% { opacity: 0.72; }
+  50%      { opacity: 1; }
+}
+
+/* ── 2 · Vesicles ─────────────────────────────────────── */
+
+/* A vesicle is something to read, not to press: a knock lands on the pane
+   through it. Only the organs that can be worked take the pointer. */
+.w-env,
+.w-cycle {
+  pointer-events: none;
+}
+
+.dial,
+.w-cycle__track {
+  pointer-events: auto;
+}
+
+/* Dark and clear, like deep water held in a skin: what glows inside it shows. */
+.w-env > .glass__body,
+.w-cycle > .glass__body {
+  background:
+    radial-gradient(120% 90% at 18% 0%, rgba(150, 220, 245, 0.1), transparent 55%),
+    linear-gradient(180deg, rgba(8, 46, 72, 0.3), rgba(3, 22, 40, 0.52));
+}
+
+/* And never quite still. */
+.w-env,
+.w-cycle {
+  animation: drift 12s ease-in-out infinite;
+}
+
+.w-cycle {
+  animation-delay: -5s;
+}
+
+@keyframes drift {
+  0%, 100% { translate: 0 1.5px; rotate: -0.2deg; }
+  50%      { translate: 0 -1.5px; rotate: 0.2deg; }
+}
+
+/* Life support, in the upper-left corner of the port. */
+.w-env {
+  left: 18px;
+  top: 16px;
+}
+
+/* Beads of air caught in it, rising and settling. */
+.organelle {
+  position: absolute;
+  left: var(--x);
+  top: var(--y);
+  width: var(--s);
+  height: var(--s);
+  margin: calc(var(--s) / -2);
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at 34% 30%, rgba(255, 255, 255, 0.95) 0 9%, transparent 17%),
+    radial-gradient(circle, transparent 50%, rgba(190, 240, 255, 0.45) 76%, rgba(232, 252, 255, 0.9) 92%, transparent 100%);
+  box-shadow: 0 0 6px rgba(var(--cyan-rgb), 0.35);
+  animation: organelle 8s ease-in-out var(--d) infinite;
+}
+
+@keyframes organelle {
+  0%, 100% { translate: 0 2px; }
+  50%      { translate: 1.5px -3px; }
+}
+
+.w-env__temp {
+  position: absolute;
+  left: 112px;
+  top: 44px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  font-size: 26px;
+  letter-spacing: 0.07em;
+  white-space: nowrap;
+  text-shadow: 0 0 14px rgba(var(--cyan-rgb), 0.45);
+}
+
+.ico-drop {
+  width: 15px;
+  height: 19px;
+  margin-right: 12px;
+  fill: none;
+  stroke: var(--ice);
+  stroke-width: 1.3;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+  filter: drop-shadow(0 0 4px rgba(var(--cyan-rgb), 0.7));
+}
+
+.ico-drop__glint {
+  stroke-width: 1;
+  opacity: 0.7;
+}
+
+.w-env .unit {
+  font-weight: 300;
+  margin-left: 1px;
+}
+
+/* The hydration vein: a channel inside the drop with her water moving in it.
+   The canvas is a rendered solid (liquid.js); this only places it and lets
+   the water glow a little into the drop around it. */
+.vein {
+  position: absolute;
+  left: 18px;
+  top: 92px;
+}
+
+.vein__liquid {
+  display: block;
+  filter: drop-shadow(0 0 6px rgba(var(--mint-rgb), 0.45));
+}
+
+/* The ether dial, in the head of the drop. */
+.dial {
+  position: absolute;
+  left: 248px;
+  top: 10px;
+  width: 112px;
+  height: 112px;
+  border-radius: 50%;
+  cursor: grab;
+  touch-action: none;
+}
+
+.dial:active {
+  cursor: grabbing;
+}
+
+.dial svg {
+  display: block;
+  overflow: visible;
+}
+
+.dial circle {
+  fill: none;
+}
+
+.dial__halo {
+  fill: url(#g-sun-halo) !important;
+  opacity: calc(0.35 + var(--light) * 0.65);
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: breathe 5s ease-in-out infinite;
+}
+
+.dial__track {
+  stroke: var(--ice-4);
+  stroke-width: 1;
+  stroke-dasharray: 75 25;
+}
+
+.dial__value {
+  stroke: var(--amber);
+  stroke-width: 2.2;
+  stroke-linecap: round;
+  stroke-dasharray: 46.5 100;
+  filter: drop-shadow(0 0 5px rgba(var(--amber-rgb), 0.85));
+}
+
+/* One orbit, carrying its two bodies slowly round. */
+.dial__orbit {
+  transform-origin: 56px 56px;
+  animation: spin 30s linear infinite;
+}
+
+.dial__orbit circle:first-child {
+  stroke: rgba(255, 228, 178, 0.32);
+  stroke-width: 0.8;
+}
+
+.dial__ring {
+  stroke: rgba(255, 226, 170, 0.8);
+  stroke-width: 1.3;
+}
+
+.dial__moon {
+  fill: var(--warm) !important;
+  filter: drop-shadow(0 0 4px rgba(var(--amber-rgb), 1));
+}
+
+/* The sun swells and settles, and burns brighter as the setting rises. */
+.dial__core {
+  fill: url(#g-sun) !important;
+  transform-box: fill-box;
+  transform-origin: center;
+  filter: drop-shadow(0 0 calc(4px + var(--light) * 9px) rgba(var(--amber-rgb), 0.95));
+  animation: pulse 3.6s ease-in-out infinite;
+}
+
+/* The handle: the bright body at the end of the arc. */
+.dial__knob {
+  fill: #fff6e0 !important;
+  stroke: rgba(var(--amber-rgb), 0.9);
+  stroke-width: 1.2;
+  filter: drop-shadow(0 0 7px rgba(var(--amber-rgb), 1)) drop-shadow(0 0 2px #fff);
+  transition: r 0.25s var(--ease);
+}
+
+.dial:hover .dial__knob,
+.dial:focus-visible .dial__knob {
+  r: 6.8;
+}
+
+@keyframes pulse {
+  0%, 100% { transform: scale(0.94); }
+  50%      { transform: scale(1.08); }
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Life cycle, lying on the sill in the lower-left corner. */
+.w-cycle {
+  left: 14px;
+  top: 838px;
+}
+
+.w-cycle__head {
+  position: absolute;
+  left: 46px;
+  width: 190px;
+  top: 30px;
+  display: flex;
+  align-items: baseline;
+  white-space: nowrap;
+}
+
+.w-cycle__head .num {
+  margin-left: 20px;
+  font-size: 18px;
+  letter-spacing: 0.08em;
+  line-height: 1;
+}
+
+.w-cycle__head .den {
+  margin-left: 2px;
+  font-size: 12px;
+  font-weight: 300;
+  letter-spacing: 0.08em;
+  color: var(--ice-2);
+}
+
+.w-cycle__stage {
+  margin-left: auto;
+  font-size: 7.5px;
+  font-weight: 500;
+  letter-spacing: 0.22em;
+  color: var(--ice-3);
+}
+
+.w-cycle__track {
+  position: absolute;
+  left: 44px;
+  width: 206px;
+  top: 66px;
+  height: 14px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.w-cycle__track::before {
+  content: "";
+  position: absolute;
+  left: 4px;
+  right: 4px;
+  top: 50%;
+  height: 1px;
+  background: var(--ice-4);
+  transition: opacity 0.9s var(--ease);
+}
+
+/* Lived years are drawn in; the remainder stays a hairline. */
+.w-cycle__track::after {
+  content: "";
+  position: absolute;
+  left: 4px;
+  top: 50%;
+  width: calc((100% - 8px) * 3 / 7);
+  height: 1px;
+  background: linear-gradient(90deg, rgba(var(--mint-rgb), 0.25), rgba(var(--mint-rgb), 0.9));
+}
+
+.w-cycle__track li {
+  position: relative;
+  z-index: 1;
+  width: 14px;
+  height: 14px;
+  display: grid;
+  place-items: center;
+}
+
+.w-cycle__track li::before {
+  content: "";
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  box-sizing: border-box;
+  border: 1px solid var(--ice-3);
+  background: rgba(4, 22, 36, 0.6);
+  transition: transform 0.3s var(--ease);
+}
+
+.w-cycle__track li:hover::before {
+  transform: scale(1.5);
+}
+
+.w-cycle__track li.is-past::before {
+  border-color: transparent;
+  background: var(--mint);
+  box-shadow: 0 0 6px rgba(var(--mint-rgb), 0.8);
+}
+
+.w-cycle__track li.is-now::before {
+  width: 11px;
+  height: 11px;
+  border: 1.5px solid var(--ice);
+  background: radial-gradient(circle, var(--mint) 0 28%, transparent 34%);
+  box-shadow: 0 0 10px rgba(var(--mint-rgb), 0.95);
+}
+
+.w-cycle__track li.is-now::after {
+  content: "";
+  position: absolute;
+  inset: -4px;
+  border: 1px solid rgba(var(--mint-rgb), 0.7);
+  border-radius: 50%;
+  animation: ring 3.6s ease-out infinite;
+}
+
+/* ── 3 · In reach ─────────────────────────────────────── */
+
+/* Care bubbles. Air, not water: thin skins that bow the view outward and carry
+   a film of colour. No two are the same size or quite in line; --cx/--cy mark
+   the middle of each bubble inside its box, which also holds its stray beads. */
+.bubble {
+  display: block;
+  border-radius: 50%;
+  transform-origin: var(--cx) var(--cy);
+  animation:
+    bob 9s ease-in-out var(--bob) infinite,
+    film 7s ease-in-out var(--bob) infinite;
+  transition: transform 0.45s var(--ease);
+}
+
+.bubble--water { right: 24px; top: 206px; --cx: 58px; --cy: 62px; --bob: 0s; }
+.bubble--light { right: 28px; top: 332px; --cx: 56px; --cy: 56px; --bob: -3s; }
+.bubble--feed  { right: 36px; top: 448px; --cx: 64px; --cy: 58px; --bob: -6s; }
+
+.bubble:hover,
+.bubble:focus-visible {
+  transform: scale(1.06);
+}
+
+.bubble:active {
+  transform: scale(0.95);
+}
+
+.bubble.is-popped {
+  animation:
+    bob 9s ease-in-out var(--bob) infinite,
+    film 7s ease-in-out var(--bob) infinite,
+    wobble 0.7s var(--ease);
+}
+
+/* Clear, and a shade darker than the water, so the mark inside stands out. */
+.bubble > .glass__body {
+  background: linear-gradient(180deg, rgba(8, 44, 66, 0.2), rgba(3, 22, 38, 0.42));
+}
+
+.bubble__icon {
+  position: absolute;
+  left: var(--cx);
+  top: var(--cy);
+  width: 64px;
+  height: 64px;
+  margin: -32px;
+  fill: none;
+  stroke: #fff;
+  stroke-width: 1.7;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  filter: drop-shadow(0 0 6px rgba(var(--cyan-rgb), 0.9));
+}
+
+.bubble__icon .fill {
+  fill: #fff;
+  stroke: none;
+}
+
+.bubble__label {
+  position: absolute;
+  right: calc(100% - var(--cx) + 70px);
+  top: var(--cy);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  transform: translate(8px, -50%);
+  font-size: 9.5px;
+  font-weight: 500;
+  letter-spacing: var(--track-wide);
+  color: var(--ice-2);
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.4s var(--ease), transform 0.4s var(--ease);
+}
+
+.bubble__label::after {
+  content: "";
+  width: 22px;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--ice-3));
+}
+
+.bubble:hover .bubble__label,
+.bubble:focus-visible .bubble__label {
+  opacity: 1;
+  transform: translate(0, -50%);
+}
+
+@keyframes bob {
+  0%, 100% { translate: 0 2.5px; }
+  50%      { translate: 0 -2.5px; }
+}
+
+/* A skin of air is never still: it leans and flattens by a hair. */
+@keyframes film {
+  0%, 100% { scale: 1.012 0.988; rotate: -1.2deg; }
+  50%      { scale: 0.988 1.012; rotate: 1.2deg; }
+}
+
+@keyframes wobble {
+  0%   { transform: scale(1, 1); }
+  22%  { transform: scale(1.1, 0.9); }
+  46%  { transform: scale(0.94, 1.06); }
+  70%  { transform: scale(1.03, 0.97); }
+  100% { transform: scale(1, 1); }
+}
+
+/* The sense switch: a lens of water with the crystal in it, resting half over
+   the hull in the lower-right corner. */
+.w-view {
+  right: 34px;
+  top: 664px;
+  border-radius: 50%;
+}
+
+.w-view > .glass__body {
+  background:
+    radial-gradient(circle at 54% 46%, rgba(160, 232, 255, 0.1), transparent 46%),
+    linear-gradient(180deg, rgba(150, 220, 240, 0.06) 14%, rgba(4, 30, 48, 0.34) 86%);
+}
+
+.w-view__dial,
+.w-view__gem {
+  position: absolute;
+  inset: 0;
+  overflow: visible;
+  pointer-events: none;
+}
+
+/* The stone's layers blend with one another, not with the lens behind them. */
+.w-view__gem {
+  isolation: isolate;
+}
+
+.w-view__dial * {
+  fill: none;
+}
+
+.view__ticks {
+  stroke: rgb(var(--teal-rgb));
+  stroke-width: 7;
+  stroke-dasharray: 1.4 5.2;
+  opacity: 0.8;
+  filter: drop-shadow(0 0 3px rgba(var(--teal-rgb), 0.8));
+  transition: stroke 0.9s var(--ease), opacity 0.9s var(--ease);
+}
+
+.view__orbit {
+  transform-origin: 150px 128px;
+  transform: rotate(-24deg);
+  animation: orbit 70s linear infinite;
+  transition: opacity 0.9s var(--ease);
+}
+
+.view__orbit ellipse {
+  stroke: var(--ice-4);
+  stroke-width: 0.9;
+}
+
+.view__orbit circle {
+  fill: var(--mint);
+  filter: drop-shadow(0 0 4px rgba(var(--mint-rgb), 1));
+}
+
+.view__chev {
+  stroke: var(--ice);
+  stroke-width: 1.6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  opacity: 0.8;
+  transition: opacity 0.9s var(--ease);
+}
+
+.view__ether circle {
+  stroke: var(--amber);
+  stroke-width: 1.3;
+  filter: drop-shadow(0 0 5px rgba(var(--amber-rgb), 0.95));
+}
+
+.view__ether .fill {
+  fill: var(--warm);
+  stroke: none;
+}
+
+/* The crystal: a ray-traced solid on its own canvas (crystal.js), centred on
+   (150, 116) in the lens, with a breath of its light on the water around it. */
+.w-view__halo {
+  position: absolute;
+  left: 54px;
+  top: 24px;
+  width: 192px;
+  height: 192px;
+  border-radius: 50%;
+  background: radial-gradient(closest-side, rgba(217, 248, 255, 0.3), rgba(143, 224, 255, 0.09) 56%, transparent);
+  pointer-events: none;
+  animation: breathe 5.2s ease-in-out infinite;
+  transition: opacity 0.9s var(--ease);
+}
+
+.w-view__crystal {
+  position: absolute;
+  left: 50px;
+  top: -4px;
+  pointer-events: none;
+  filter: drop-shadow(0 0 12px rgba(170, 236, 255, 0.5));
+  transition: transform 0.7s var(--ease), filter 0.9s var(--ease);
+}
+
+.w-view:hover .w-view__crystal,
+.w-view:focus-visible .w-view__crystal {
+  transform: scale(1.06);
+}
+
+.w-view:active .w-view__crystal {
+  transform: scale(0.96);
+}
+
+/* The flat stand-in, drawn by gem.js only where the solid cannot be rendered. */
+.gem {
+  transform-origin: 150px 116px;
+  filter: drop-shadow(0 0 10px rgba(170, 236, 255, 0.55));
+  transition: transform 0.7s var(--ease), filter 0.9s var(--ease);
+}
+
+.gem__body {
+  fill: rgba(196, 238, 255, 0.07);
+}
+
+.gem__back {
+  transform-origin: 150px 116px;
+  mix-blend-mode: screen;
+  opacity: 0.8;
+  animation: gem-turn 17s ease-in-out infinite alternate;
+}
+
+.gem__back polygon {
+  fill: #fff;
+}
+
+.gem__back path {
+  fill: none;
+  stroke: rgba(255, 255, 255, 0.42);
+  stroke-width: 0.6;
+  stroke-linejoin: round;
+}
+
+.gem__facet {
+  animation: facet 7s ease-in-out infinite;
+  animation-delay: calc(var(--i) * -0.47s);
+}
+
+.gem__core {
+  mix-blend-mode: screen;
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: breathe 4.6s ease-in-out infinite;
+}
+
+.gem__flare {
+  transform-origin: 152px 113px;
+  mix-blend-mode: screen;
+  animation: spin 52s linear infinite;
+}
+
+.gem__prism {
+  fill: none;
+  stroke-width: 6;
+  stroke-linejoin: round;
+  opacity: 0.5;
+  mix-blend-mode: screen;
+}
+
+.gem__net {
+  fill: none;
+  stroke: rgba(255, 255, 255, 0.3);
+  stroke-width: 0.5;
+  stroke-linejoin: round;
+}
+
+.gem__edge {
+  fill: none;
+  stroke-width: 1.1;
+  stroke-linejoin: round;
+}
+
+.gem__rays {
+  mix-blend-mode: screen;
+  animation: glow 6.4s ease-in-out infinite;
+  transition: opacity 0.9s var(--ease);
+}
+
+.gem__halo {
+  transition: opacity 0.9s var(--ease);
+}
+
+.gem__star {
+  fill: #fff;
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: twinkle 3.4s ease-in-out infinite;
+  animation-delay: calc(var(--i) * -1.5s);
+  filter: drop-shadow(0 0 4px #fff);
+}
+
+.w-view:hover .gem,
+.w-view:focus-visible .gem {
+  transform: scale(1.05) rotate(-3deg);
+}
+
+.w-view:active .gem {
+  transform: scale(0.96);
+}
+
+.w-view__label {
+  position: absolute;
+  left: 0;
+  width: 300px;
+  top: 199px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  pointer-events: none;
+}
+
+.w-view__label b {
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.4em;
+  margin-right: -0.4em;
+}
+
+.w-view__label i {
+  font-style: normal;
+  font-size: 7.5px;
+  font-weight: 500;
+  letter-spacing: 0.3em;
+  margin-right: -0.3em;
+  color: var(--ice-3);
+  transition: color 0.9s var(--ease);
+}
+
+@keyframes orbit {
+  from { transform: rotate(-24deg); }
+  to   { transform: rotate(336deg); }
+}
+
+@keyframes gem-turn {
+  from { transform: rotate(-7deg) scale(0.98); }
+  to   { transform: rotate(7deg) scale(1.03); }
+}
+
+@keyframes facet {
+  0%, 100% { opacity: 1; }
+  50%      { opacity: 0.6; }
+}
+
+@keyframes twinkle {
+  0%, 100% { transform: scale(0.4); opacity: 0.2; }
+  50%      { transform: scale(1); opacity: 1; }
+}
+
+/* Speech: dark, clear glass. The body dims what is behind it rather than
+   fogging it, so the water still shows; the glass is all in its edges. */
+.w-dialog {
+  left: 50%;
+  top: 802px;
+  margin-left: -352px;
+  cursor: pointer;
+}
+
+.w-dialog > .glass__body {
+  background:
+    linear-gradient(180deg, rgba(120, 200, 230, 0.06), transparent 30%),
+    linear-gradient(180deg, rgba(4, 26, 46, 0.66), rgba(2, 14, 28, 0.8));
+}
+
+/* Her name, on a paler capsule laid across the upper-left edge. */
+.w-dialog__tag {
+  left: 30px;
+  top: -20px;
+  display: flex;
+  align-items: center;
+}
+
+.w-dialog__tag > .glass__body {
+  background:
+    radial-gradient(120% 120% at 20% 0%, rgba(214, 246, 255, 0.2), transparent 60%),
+    linear-gradient(180deg, rgba(70, 150, 184, 0.36), rgba(14, 58, 86, 0.5));
+}
+
+.w-dialog__drop {
+  position: relative;
+  flex: none;
+  width: 15px;
+  height: 19px;
+  margin-left: 20px;
+  fill: #f4fdff;
+  filter: drop-shadow(0 0 5px rgba(var(--cyan-rgb), 0.95));
+}
+
+.w-dialog__drop circle {
+  fill: #3aa6de;
+}
+
+.w-dialog__tag .label {
+  position: relative;
+  margin-left: 14px;
+  font-size: 11.5px;
+  color: var(--ice);
+}
+
+.w-dialog__line,
+.w-dialog__glyphs {
+  position: absolute;
+  inset: 0 0 2px;
+}
+
+.w-dialog__line {
+  margin: 0;
+  display: grid;
+  place-items: center;
+  font-family: var(--font-speech);
+  font-size: 24px;
+  font-weight: 400;
+  letter-spacing: 0.16em;
+  text-indent: 0.16em;
+  color: #f4fcff;
+  text-shadow: 0 0 16px rgba(var(--cyan-rgb), 0.4);
+}
+
+.w-dialog__next {
+  position: absolute;
+  right: 40px;
+  bottom: 24px;
+  width: 16px;
+  height: 16px;
+  fill: var(--ice);
+  filter: drop-shadow(0 0 5px rgba(var(--cyan-rgb), 0.9));
+  opacity: 0;
+}
+
+.w-dialog.is-idle .w-dialog__next {
+  opacity: 1;
+  animation: twinkle 2.2s ease-in-out infinite;
+}
+
+/* What she means, before it has words: a row of pulses. */
+.w-dialog__glyphs {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 22px;
+  pointer-events: none;
+}
+
+.w-dialog__glyphs i {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: rgb(var(--mood-rgb));
+  box-shadow: 0 0 14px rgba(var(--mood-rgb), 0.9);
+  animation: glyph 2.4s ease-in-out infinite;
+}
+
+.w-dialog__glyphs i:nth-child(1) { animation-delay: -2.4s; }
+.w-dialog__glyphs i:nth-child(2) { animation-delay: -2.2s; }
+.w-dialog__glyphs i:nth-child(3) { animation-delay: -2s; }
+.w-dialog__glyphs i:nth-child(4) { animation-delay: -1.8s; }
+.w-dialog__glyphs i:nth-child(5) { animation-delay: -1.6s; }
+.w-dialog__glyphs i:nth-child(6) { animation-delay: -1.4s; }
+.w-dialog__glyphs i:nth-child(7) { animation-delay: -1.2s; }
+.w-dialog__glyphs i:nth-child(8) { animation-delay: -1s; }
+.w-dialog__glyphs i:nth-child(9) { animation-delay: -0.8s; }
+
+@keyframes glyph {
+  0%, 100% { transform: scale(0.5); opacity: 0.25; }
+  40%      { transform: scale(1.5); opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hud *,
+  .hud *::before,
+  .hud *::after,
+  .imprint * {
+    animation: none !important;
+  }
+}

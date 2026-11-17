@@ -1,0 +1,58 @@
+{
+  "date": "2026-11-16",
+  "reason": "按用户要求更新露缇人设图，移除旧形象，整理现有 CG 与补充材料。",
+  "migrated": [
+    {
+      "from": "references/game-hud/Koma-1-v1.png",
+      "to": "characters/lutie/portrait.png",
+      "sha256": "bae4ff5f0fc97326c4d9d9566cfcc9f643443bc5d4e5cef1a8c6d7edc8204269"
+    },
+    {
+      "from": "references/game-hud/nai-diffusion-5-full-1036129100.png",
+      "to": "characters/lutie/extra/portrait-transparent.png",
+      "sha256": "4be2f9be2717fcf3d00e2fca47fb94fd4b1d11248d2cd5e0060f929df45669e4"
+    }
+  ],
+  "archived": [
+    {
+      "from": "characters/lutie/portrait.jpg",
+      "to": "_archive/lutie-art-20261116/images/characters/lutie/portrait.jpg",
+      "sha256": "3bde81e08523ec0485fcfb192dd9db40115957ebfa1a6b7fa60f63e24a878944"
+    },
+    {
+      "from": "characters/lutie/refs/blue-glow.png",
+      "to": "_archive/lutie-art-20261116/images/characters/lutie/refs/blue-glow.png",
+      "sha256": "7923e466f4b4e0a89a8c47ecc12bc289ad3f8bf51a9515e88f65d13bdd5b78af"
+    },
+    {
+      "from": "g9qc1e.jpg",
+      "to": "_archive/lutie-art-20261116/images/g9qc1e.jpg",
+      "sha256": "3bde81e08523ec0485fcfb192dd9db40115957ebfa1a6b7fa60f63e24a878944"
+    },
+    {
+      "from": "ufap3a.png",
+      "to": "_archive/lutie-art-20261116/images/ufap3a.png",
+      "sha256": "7923e466f4b4e0a89a8c47ecc12bc289ad3f8bf51a9515e88f65d13bdd5b78af"
+    }
+  ],
+  "metadata_before": [
+    "_archive/lutie-art-20261116/metadata-before/characters/lutie/char.json",
+    "_archive/lutie-art-20261116/metadata-before/characters/lutie/profile.md",
+    "_archive/lutie-art-20261116/metadata-before/references/references.json",
+    "_archive/lutie-art-20261116/metadata-before/README.md",
+    "_archive/lutie-art-20261116/metadata-before/prototype/index.html"
+  ],
+  "classification": {
+    "characters": [
+      "characters/lutie/portrait.png",
+      "characters/lutie/extra/portrait-transparent.png"
+    ],
+    "public_ui": [
+      "references/game-hud/Koma-6-v1.png"
+    ],
+    "public_background": [
+      "references/game-hud/Koma-1-v1 (1).png"
+    ]
+  },
+  "notes": "UI 概念稿按用户要求保留在公共参考，人物资料仅含主立绘与透明底立绘。"
+}

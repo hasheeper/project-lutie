@@ -1,0 +1,363 @@
+/* The pane's other uses.
+
+   Besides watching her, the pane can be given over to two things: the system
+   sheet (system.css) and the map of the facility (map.css). Neither is a
+   panel laid over the port. The observation steps back, what the hand
+   reaches for leaves, and for a while the glass itself carries something
+   else. `data-mode` on the stage says which: observe | system | map.
+
+   This file is what the two have in common: how far the room recedes, what
+   leaves, the bubbles in the upper-right corner that open and close them,
+   the type they are headed with, and the lobed cell both use for a choice
+   between a few options.
+
+   Colour is kept for what means something — mint for water and for her,
+   amber for ether and for lamps. Nothing is tinted to say that it is
+   selected: that is said with brightness, and with where the liquid is.      */
+
+/* ── The observation steps back ───────────────────────── */
+
+.stage {
+  --recede: 1;          /* how much of the room's moving light is left */
+  --dust: 1;            /* and of what drifts in the water */
+  --fx-caustics: 1;     /* set from the sheet's Display page */
+  --fx-motes: 1;
+}
+
+.stage[data-mode="system"] {
+  --recede: 0.58;
+  --dust: 0.62;
+}
+
+.stage[data-mode="map"] {
+  --recede: 0.3;
+  --dust: 0.14;
+}
+
+/* The eye has refocused on the glass: the room behind goes soft and dim —
+   a little for the sheet, which leaves her in view; a great deal for the
+   map, which is drawn across the whole pane. */
+.scene {
+  transition: filter 1.2s var(--ease);
+}
+
+.stage[data-mode="system"] .scene {
+  filter: blur(3px) brightness(0.56) saturate(0.9);
+}
+
+.stage[data-mode="map"] .scene {
+  filter: blur(8px) brightness(0.36) saturate(1);
+}
+
+.rays {
+  opacity: calc((0.18 + var(--light) * 0.82) * var(--recede));
+}
+
+.caustics {
+  opacity: calc((0.3 + var(--light) * 0.6) * var(--fx-caustics) * var(--recede));
+}
+
+.motes {
+  opacity: calc(var(--fx-motes) * var(--dust));
+  transition: opacity 0.6s var(--ease);
+}
+
+.pane__raster,
+.pane__scan {
+  transition: opacity 0.9s var(--ease);
+}
+
+.stage:not([data-mode="observe"]) .pane__scan,
+.stage[data-raster="off"] .pane__raster,
+.stage[data-raster="off"] .pane__scan {
+  opacity: 0;
+}
+
+/* For the sheet she moves into the clear water beside it, draws back a
+   little, and goes on breathing; how far is worked out from the port
+   (system.js). Behind the map she stays where she is and is only her light:
+   the figure goes, the glow round it stays, turned low. */
+.lutie {
+  transform-origin: 50% 26%;
+  transition: translate 1.7s var(--ease-soft), scale 1.7s var(--ease-soft);
+}
+
+.lutie__sprite {
+  transition: filter 1.2s var(--ease), opacity 1.2s var(--ease);
+}
+
+.lutie__pool {
+  transition: opacity 1.2s var(--ease);
+}
+
+.stage[data-mode="system"] .lutie {
+  translate: var(--sys-shift, 440px) 0;
+  scale: var(--sys-back, 0.93);
+}
+
+.stage[data-mode="system"] .lutie__sprite {
+  filter:
+    drop-shadow(0 0 12px rgba(var(--mint-rgb), 0.36))
+    drop-shadow(0 0 44px rgba(var(--mint-rgb), 0.2))
+    brightness(0.86);
+}
+
+.stage[data-mode="map"] .lutie__sprite {
+  filter:
+    drop-shadow(0 0 12px rgba(var(--mint-rgb), 0.36))
+    drop-shadow(0 0 44px rgba(var(--mint-rgb), 0.2))
+    brightness(0.5)
+    blur(24px);
+  opacity: 0;
+}
+
+.stage[data-mode="map"] .lutie__aura {
+  opacity: 0.22;
+}
+
+.stage[data-mode="map"] .lutie__pool {
+  opacity: 0.2;
+}
+
+/* What the hand reaches for leaves: glass as body and light, the rest as itself. */
+.w-view__dial,
+.w-view__gem,
+.w-view__label,
+.w-dialog__drop {
+  transition: opacity 0.8s var(--ease);
+}
+
+.w-view__crystal {
+  transition: transform 0.7s var(--ease), filter 0.9s var(--ease), opacity 0.8s var(--ease);
+}
+
+.stage:not([data-mode="observe"]) .hud__reach .glass__body,
+.stage:not([data-mode="observe"]) .hud__reach .glass__light {
+  opacity: 0;
+}
+
+.stage:not([data-mode="observe"]) .hud__reach [data-human],
+.stage:not([data-mode="observe"]) .hud__reach [data-sense],
+.stage:not([data-mode="observe"]) .hud__reach .w-view__dial,
+.stage:not([data-mode="observe"]) .hud__reach .w-view__halo,
+.stage:not([data-mode="observe"]) .hud__reach .w-view__crystal,
+.stage:not([data-mode="observe"]) .hud__reach .w-view__gem,
+.stage:not([data-mode="observe"]) .hud__reach .w-view__label,
+.stage:not([data-mode="observe"]) .hud__reach .w-dialog__drop {
+  opacity: 0 !important;
+}
+
+.stage:not([data-mode="observe"]) .hud__reach .w {
+  pointer-events: none;
+}
+
+/* The corner vesicles are part of the pane and stay. Under the sheet they
+   are turned down and their organs stop answering; beside the map they are
+   its legend — the humidity scale and the ether dial read the same things
+   the map shows — and are left as they are. Her name plate makes way in
+   both; the scale makes way for the sheet's thread. */
+.vein,
+.dial,
+.w-cycle__track,
+.plate {
+  transition: opacity 0.8s var(--ease);
+}
+
+.stage[data-mode="system"] .w-env [data-human],
+.stage[data-mode="system"] .w-cycle [data-human] {
+  opacity: 0.4;
+}
+
+.stage[data-mode="system"] .vein,
+.stage[data-mode="system"] .dial,
+.stage[data-mode="system"] .w-cycle__track {
+  opacity: 0.45;
+  pointer-events: none;
+}
+
+.stage[data-mode="system"] .ruler,
+.stage:not([data-mode="observe"]) .plate {
+  opacity: 0;
+}
+
+/* ── The ways in and out ──────────────────────────────── */
+
+/* Two small bubbles follow the curve of the port's upper-right corner, one
+   for each use. Each shows its own mark at rest and a cross while its use is
+   open; touching the other goes straight across. They never leave. */
+.entry {
+  --bob: -1.5s;
+}
+
+.entry--system {
+  right: 78px;
+  top: 40px;
+  --cx: 34px;
+  --cy: 34px;
+}
+
+.entry--map {
+  right: 156px;
+  top: 16px;
+  --cx: 30px;
+  --cy: 30px;
+  --bob: -5s;
+}
+
+.entry .bubble__icon {
+  width: 44px;
+  height: 44px;
+  margin: -22px;
+  stroke-width: 1.8;
+}
+
+.entry--map .bubble__icon {
+  width: 40px;
+  height: 40px;
+  margin: -20px;
+}
+
+/* Their names are said below them: beside them there is only hull. */
+.entry .bubble__label {
+  right: auto;
+  left: var(--cx);
+  top: calc(var(--cy) * 2 + 12px);
+  transform: translate(-50%, -6px);
+}
+
+.entry .bubble__label::after {
+  content: none;
+}
+
+.entry:hover .bubble__label,
+.entry:focus-visible .bubble__label {
+  transform: translate(-50%, 0);
+}
+
+.entry__mark,
+.entry__cross {
+  transform-origin: 20px 20px;
+  transition: opacity 0.5s var(--ease), transform 0.6s var(--ease);
+}
+
+.entry__cross {
+  opacity: 0;
+  transform: rotate(-45deg) scale(0.6);
+}
+
+.entry[aria-expanded="true"] .entry__mark {
+  opacity: 0;
+  transform: scale(0.4);
+}
+
+.entry[aria-expanded="true"] .entry__cross {
+  opacity: 1;
+  transform: none;
+}
+
+/* ── Headed ───────────────────────────────────────────── */
+
+.heading {
+  position: absolute;
+  white-space: nowrap;
+}
+
+.heading__title {
+  margin: 0;
+  display: flex;
+  align-items: baseline;
+  gap: 24px;
+  font-weight: 300;
+  text-shadow: 0 0 16px rgba(var(--cyan-rgb), 0.4);
+}
+
+.heading__title b {
+  font-size: 25px;
+  font-weight: 300;
+  letter-spacing: 0.34em;
+  line-height: 1;
+}
+
+.heading__title span {
+  font-size: var(--type-title);
+  letter-spacing: 0.22em;
+  line-height: 1;
+}
+
+/* Its rule is short and runs out, like the one under her name. */
+.heading__sub {
+  margin: 15px 0 0;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  font-size: var(--type-caption);
+  font-weight: 500;
+  letter-spacing: var(--track-wide);
+  color: var(--ice-3);
+}
+
+.heading__sub::after {
+  content: "";
+  width: 96px;
+  height: 1px;
+  background: linear-gradient(90deg, var(--ice-3), transparent);
+}
+
+/* ── A choice ─────────────────────────────────────────── */
+
+/* One small cell of glass with a lobe for each option (lobes.js). The
+   options are print; a bead of air rests in the chosen lobe, and squeezes
+   through the waist to reach another. */
+.lobes button {
+  position: absolute;
+  top: 0;
+  height: 100%;
+  padding-left: 16px;
+  font-size: 14px;
+  letter-spacing: 0.22em;
+  text-indent: 0.22em;
+  color: rgba(196, 238, 252, 0.56);
+  white-space: nowrap;
+  pointer-events: auto;
+  transition: color 0.45s var(--ease);
+}
+
+.lobes button:hover {
+  color: var(--ice-2);
+}
+
+.lobes button[aria-checked="true"] {
+  color: var(--ice);
+}
+
+.lobes__bead {
+  --bead-rgb: var(--cyan-rgb);
+  position: absolute;
+  left: 0;
+  top: 50%;
+  width: 9px;
+  height: 9px;
+  margin: -4.5px 0 0 -4.5px;
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at 36% 32%, #fff 0 16%, transparent 30%),
+    radial-gradient(circle, rgba(226, 250, 255, 0.6) 40%, rgba(206, 244, 255, 0.78) 72%, rgba(244, 253, 255, 1) 90%, transparent 100%);
+  box-shadow: 0 0 10px rgba(var(--bead-rgb), 0.85), 0 0 3px rgba(255, 255, 255, 0.6);
+  pointer-events: none;
+  transition: translate 0.6s var(--ease-soft), box-shadow 0.6s var(--ease);
+}
+
+.lobes__bead.is-passing {
+  animation: pass 0.6s var(--ease-soft);
+}
+
+@keyframes pass {
+  0%, 100% { scale: 1; }
+  50%      { scale: 1.5 0.66; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lobes__bead.is-passing {
+    animation: none;
+  }
+}

@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="zh-Hans">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#f0f0e9">
+  <title>Lutie · 空间设计工作台</title>
+  <link rel="stylesheet" href="studio.css">
+  <script type="importmap">{"imports":{"three":"./vendor/three.module.js"}}</script>
+</head>
+<body>
+  <header class="app-header">
+    <a class="brand" href="./" aria-label="Lutie 空间设计首页">
+      <svg viewBox="0 0 32 32" aria-hidden="true"><path d="m16 3 12 7v13l-12 7L4 23V10Z M4 10l12 7 12-7 M16 17v13 M10 6.5l12 7v6.5"/></svg>
+      <span><strong>LUTIE <i>SPACE STUDY</i></strong><small>生态设施 · 空间设计</small></span>
+    </a>
+    <div class="project-meta"><span>A—01</span><span class="proposal-badge">概念方案</span><span class="header-area">100.00 ㎡</span></div>
+    <div class="header-actions">
+      <button class="quiet-btn" id="save-design"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M10 3v9m-3-3 3 3 3-3M4 13v4h12v-4"/></svg><span>保存方案</span></button>
+      <button class="primary-btn" id="export-image"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M3 5h14v12H3z M6 5l1-2h6l1 2"/><circle cx="10" cy="11" r="3"/></svg><span>导出模型图</span></button>
+    </div>
+  </header>
+  <div class="workspace">
+    <aside class="left-panel panel" aria-label="空间与图层">
+      <div class="panel-kicker">空间索引 <span>04</span></div>
+      <nav id="room-list" aria-label="选择房间"></nav>
+      <div class="panel-divider"></div>
+      <div class="panel-kicker">显示图层</div>
+      <div class="layer-list">
+        <label><input type="checkbox" id="layer-furniture" checked><span>家具与尺度模型</span></label>
+        <label><input type="checkbox" id="layer-equipment" checked><span>维生设备</span></label>
+        <label><input type="checkbox" id="layer-water" checked><span>水面与水体</span></label>
+        <label><input type="checkbox" id="layer-glass" checked><span>玻璃隔断</span></label>
+        <label><input type="checkbox" id="layer-dimensions"><span>尺寸标注</span></label>
+        <label><input type="checkbox" id="avoid-walls" checked><span>外墙避让</span><small>随视角</small></label>
+        <label><input type="checkbox" id="full-walls"><span>完整墙高</span><small>2.80m</small></label>
+      </div>
+      <div class="panel-divider"></div>
+      <label class="panel-kicker" for="route-select">空间关系</label>
+      <select id="route-select"><option value="none">无叠加</option><option value="human">研究员动线</option><option value="lutie">Lutie 回水动线</option><option value="plumbing">循环水路示意</option></select>
+      <div class="left-foot"><span class="north-symbol">N ↑</span><p>以米为单位构建<br>Y 轴为垂直标高</p><small>分区尺寸沿用现有 MAP<br>内部布置与标高为本版提案</small></div>
+    </aside>
+
+    <main class="viewport" id="viewport" aria-label="可旋转的三维建筑模型">
+      <div class="view-top">
+        <div class="view-tabs" role="group" aria-label="模型视角">
+          <button data-view="overview" aria-pressed="true"><span>01</span> 总览</button>
+          <button data-view="plan" aria-pressed="false"><span>02</span> 顶视</button>
+          <button data-view="section" aria-pressed="false"><span>03</span> 剖切</button>
+          <button data-view="eye" aria-pressed="false"><span>04</span> 观察位</button>
+        </div>
+        <button class="icon-btn" id="toggle-panels" aria-label="收起侧栏" title="收起侧栏"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M3 7V3h4m6 0h4v4M3 13v4h4m6 0h4v-4"/></svg></button>
+      </div>
+      <div class="view-caption"><span id="view-code">AXONOMETRIC / 01</span><h1 id="view-name">让空间关系清晰可见。</h1><p id="view-description">下沉池体 · 错层观察 · 干湿分区</p></div>
+      <div id="canvas-host"></div>
+      <div id="model-labels" aria-hidden="true"></div>
+      <div class="loading" id="loading"><span></span>正在构建空间模型</div>
+      <div class="error-message" id="error-message" hidden role="alert"></div>
+      <div class="section-control" id="section-control" hidden>
+        <label for="section-position">A—A 剖切位置 <output id="section-output">−1.20 m</output></label>
+        <input id="section-position" type="range" min="-3.5" max="3.5" step="0.05" value="-1.2">
+        <div><span>北侧</span><span>南侧</span></div>
+      </div>
+      <div class="eye-note" id="eye-note" hidden><span class="live-dot"></span><span id="eye-note-text"></span><button id="eye-reset">视线归中</button></div>
+      <div class="view-bottom"><div id="interaction-hint"><span class="mouse-mark"></span> 拖动旋转 <b>·</b> 滚轮缩放 <b>·</b> 右键平移</div><button class="quiet-btn" id="reset-camera">↺ 复位视角</button></div>
+      <div class="compass" aria-hidden="true"><span>N</span><svg viewBox="0 0 60 60"><g id="compass-needle"><path class="north-half" d="M30 6 36 30 30 27 24 30Z"/><path class="south-half" d="M30 54 24 30 30 33 36 30Z"/></g></svg></div>
+    </main>
+
+    <aside class="right-panel panel" aria-label="方案参数与空间核查">
+      <div class="panel-kicker">DESIGN ITERATION <span>01</span></div>
+      <h2>下沉观察方案</h2><p class="panel-intro">以生活层 ±0.00m 为基准，<br>检验水面、眼位与日常互动的关系。</p>
+      <div class="readouts"><div><span>池内水深</span><strong id="read-depth">2.05 <small>m</small></strong></div><div><span>坐姿眼位</span><strong id="read-eye">−0.65 <small>m</small></strong></div></div>
+      <div class="panel-divider"></div>
+      <div class="panel-kicker">设计参数 <span class="source-label">暂定</span></div>
+      <div class="parameter"><label for="param-water">水面标高 <output id="out-water">−0.15 <small>m</small></output></label><input id="param-water" type="range" min="-0.35" max="-0.05" step="0.05" value="-0.15"><div><span>−0.35</span><span>−0.05</span></div></div>
+      <div class="parameter"><label for="param-office">观察室地坪 <output id="out-office">−1.80 <small>m</small></output></label><input id="param-office" type="range" min="-2.05" max="-1.2" step="0.05" value="-1.8"><div><span>−2.05</span><span>−1.20</span></div></div>
+      <div class="parameter"><label for="param-deck">亲水台进深 <output id="out-deck">1.25 <small>m</small></output></label><input id="param-deck" type="range" min="0.6" max="1.8" step="0.05" value="1.25"><div><span>0.60</span><span>1.80</span></div></div>
+      <button class="text-btn" id="reset-parameters">恢复初始参数</button>
+      <div class="panel-divider"></div>
+      <div class="panel-kicker">空间核查 <span class="source-label">计算值</span></div>
+      <div id="checks" class="checks" aria-live="polite"></div>
+      <div class="selection-info" id="selection-info" hidden><div class="panel-divider"></div><div class="panel-kicker">当前选区 <span id="selection-area"></span></div><h3 id="selection-name"></h3><p id="selection-description"></p></div>
+      <p class="design-footnote">池底 −2.20m · 浅台 −0.45m<br>观察室挑空；楼梯为 10 级概念布置。<br>面积未扣墙厚，尚未做施工与设备校核。</p>
+    </aside>
+  </div>
+  <footer class="app-footer"><span><i></i> <span id="render-status">准备模型</span></span><span id="footer-metric">12.50 × 8.00 m <b>／</b> 100.00 ㎡</span><span>SPACE IS A RELATIONSHIP.</span></footer>
+  <div class="toast" id="toast" role="status" hidden></div>
+  <script type="module" src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,16 @@
+{
+  "items": [
+    {
+      "file": "game-hud/Koma-1-v1 (1).png",
+      "title": "生态观察舱背景",
+      "category": "场景背景",
+      "description": "独立的生态观察舱环境背景，用于角色与 HUD 的分层组合，参考水体、光束、焦散和研究设施空间。"
+    },
+    {
+      "file": "game-hud/Koma-6-v1.png",
+      "title": "UI 概念稿",
+      "category": "UI 概念",
+      "description": "游戏主界面的公共概念参考，展示生态观察舱、角色与边缘 HUD 的整体关系，以及玻璃、光环、水滴控件的视觉方向。"
+    }
+  ]
+}

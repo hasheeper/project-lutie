@@ -1,0 +1,28 @@
+{
+  "items": [
+    {
+      "file": "game-hud/Koma-1-v1.png",
+      "title": "立绘初稿",
+      "category": "角色素材",
+      "description": "露缇立绘初稿。"
+    },
+    {
+      "file": "game-hud/nai-diffusion-5-full-1036129100.png",
+      "title": "概念前端临时透明底立绘",
+      "category": "角色素材",
+      "description": "概念前端暂用的透明底角色素材。"
+    },
+    {
+      "file": "game-hud/Koma-6-v1.png",
+      "title": "UI 概念稿",
+      "category": "UI 概念",
+      "description": "游戏 HUD 的界面与整体视觉概念参考。"
+    },
+    {
+      "file": "game-hud/Koma-1-v1 (1).png",
+      "title": "UI 概念稿背景素材",
+      "category": "背景素材",
+      "description": "UI 概念稿使用的生态观察舱背景素材。"
+    }
+  ]
+}

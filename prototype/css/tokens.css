@@ -1,0 +1,51 @@
+/* Design tokens. Colour follows the brief: deep-sea teal for the room,
+   Lutie's mint glow as the main light, amber and warm white for life and ether. */
+:root {
+  /* Water and hull */
+  --abyss: #030b12;
+  --hull: #06090d;
+  --deep: #0a2a3d;
+
+  /* Light carried by the HUD */
+  --ice: #ecfcff;
+  --ice-2: rgba(222, 248, 255, 0.74);
+  --ice-3: rgba(196, 238, 252, 0.44);
+  --ice-4: rgba(196, 238, 252, 0.2);
+  --cyan-rgb: 150, 230, 255;
+  --mint: #7ef5dc;
+  --mint-rgb: 126, 245, 220;
+  --teal-rgb: 70, 225, 205;
+
+  /* Life and ether */
+  --amber: #ffc978;
+  --amber-rgb: 255, 201, 120;
+  --warm: #fff3dc;
+
+  /* Emotion colour; reassigned per mood on the stage */
+  --mood-rgb: var(--mint-rgb);
+
+  /* Type */
+  --font-label: "Avenir Next", "Avenir", "Futura", "Century Gothic", "Helvetica Neue", "PingFang SC", sans-serif;
+  --font-speech: "Songti SC", "STSong", "Source Han Serif SC", "Noto Serif CJK SC", "Noto Serif SC", serif;
+  --track-wide: 0.34em;
+  --track-mid: 0.18em;
+
+  /* The system's own voice, where it has sentences to say rather than
+     readings to show: Chinese set in the label face's sans (PingFang falls
+     out of --font-label), light and widely spaced. The serif stays hers. */
+  --type-title: 21px;
+  --type-row: 15px;
+  --type-note: 13px;
+  --type-caption: 8.5px;
+
+  /* Motion */
+  --ease: cubic-bezier(0.22, 0.8, 0.24, 1);
+  --ease-soft: cubic-bezier(0.45, 0.05, 0.25, 1);
+
+  /* Live values written by script */
+  --light: 0.62;
+}
+
+.stage[data-mood="curious"]  { --mood-rgb: 255, 214, 150; }
+.stage[data-mood="drowsy"]   { --mood-rgb: 132, 168, 255; }
+.stage[data-mood="overload"] { --mood-rgb: 255, 168, 204; }
