@@ -80,7 +80,7 @@
 
 ## 设计咨询与采纳
 
-通过 [model-consult 技能](/Users/liuhang/.codex/skills/model-consult/SKILL.md) 咨询了配置中的 `proxy:claude-opus-5-5 [perplexity]`。原始答复见 [design-consult-v1.md](design-consult-v1.md)，版本与会话 ID 保留在文件中。渠道答复在 CSS 示例处被截断，原文保持原样。
+通过本机的 `model-consult` 技能咨询了配置中的 `proxy:claude-opus-5-5 [perplexity]`。原始答复见 [design-consult-v1.md](design-consult-v1.md)，版本与会话 ID 保留在文件中。渠道答复在 CSS 示例处被截断，原文保持原样。
 
 初版采用了浅色建筑模型、模型优先、四种视角和可追溯参数的方向。后续根据用户参考图与反馈，改为上述半透明模型表现。尺寸模型、三维几何、可移动剖面、规则构件截面、下沉培育井与几何验证由本项目独立实现。咨询中的完整通用校验清单未被当作已完成结果。
 
