@@ -275,19 +275,24 @@
      for what it shows: along the edge normal, strongest at the outline and
      gone where the rim ends. Water bends the view inward; air, outward.       */
 
-  function lensMap(f, o) {
-    const width = f.w + f.pad * 2;
-    const height = f.h + f.pad * 2;
+  /* `step`: stage px to a pixel of the map. The browser hands the map to its compositor again with every
+     frame the glass is drawn, so its size is paid for continually; and the field it is read from is only
+     sampled every `cell` px, so a map that fine holds all there is. Its one sharp feature is the outline,
+     where the bend stops: a coarser map carries the outline's own bend a step past it, so that what lies
+     just inside is not averaged with the flat outside. (Outside the outline the body is clipped away.)       */
+  function lensMap(f, o, step = 1) {
+    const width = Math.ceil((f.w + f.pad * 2) / step);
+    const height = Math.ceil((f.h + f.pad * 2) / step);
     const data = new Uint8ClampedArray(width * height * 4);
     const { cols, cell, d, gx, gy } = f;
     const sign = o.bend > 0 ? -1 : 1;
     const reach = o.reach || o.edge;                  // how far in from the outline the view is bent
     for (let y = 0; y < height; y++) {
-      const fy = (y + 0.5) / cell;
+      const fy = ((y + 0.5) * step) / cell;
       const j = fy | 0;
       const ty = fy - j;
       for (let x = 0; x < width; x++) {
-        const fx = (x + 0.5) / cell;
+        const fx = ((x + 0.5) * step) / cell;
         const i = fx | 0;
         const tx = fx - i;
         const o0 = j * cols + i;
@@ -300,7 +305,7 @@
         const p = (y * width + x) * 4;
         let ox = 0;
         let oy = 0;
-        const m = dist < 0 ? clamp01(1 + dist / reach) : 0;
+        const m = dist < 0 ? clamp01(1 + dist / reach) : step > 1 && dist < step ? 1 : 0;
         if (m > 0) {
           const nx = gx[o0] * w00 + gx[o0 + 1] * w10 + gx[o1] * w01 + gx[o1 + 1] * w11;
           const ny = gy[o0] * w00 + gy[o0 + 1] * w10 + gy[o1] * w01 + gy[o1 + 1] * w11;
@@ -325,20 +330,73 @@
     return c;
   }
 
+  /**
+   * Where the coarse map, as the browser spreads it between its pixels, bends the view more than `tolerance`
+   * px away from the full map — only round beads too small for it, in practice — pieces of the full map,
+   * to lay over it there. Only what lies inside the outline counts: the rest is clipped away.
+   */
+  function patches(f, fine, coarse, step, scale, tolerance = 1.5) {
+    const W = fine.width, H = fine.height, TILE = 24, boxes = new Map();
+    const at = (X, Y, c) => coarse.data[(Math.min(coarse.height - 1, Math.max(0, Y)) * coarse.width + Math.min(coarse.width - 1, Math.max(0, X))) * 4 + c];
+    for (let y = 0; y < H; y++) {
+      const fy = (y + 0.5) / f.cell, j = fy | 0, ty = fy - j, v = (y + 0.5) / step - 0.5, Y = Math.floor(v), b = v - Y;
+      for (let x = 0; x < W; x++) {
+        const fx = (x + 0.5) / f.cell, i = fx | 0, tx = fx - i, o0 = j * f.cols + i, o1 = o0 + f.cols;
+        if (f.d[o0] * (1 - tx) * (1 - ty) + f.d[o0 + 1] * tx * (1 - ty) + f.d[o1] * (1 - tx) * ty + f.d[o1 + 1] * tx * ty >= 0) continue;
+        const u = (x + 0.5) / step - 0.5, X = Math.floor(u), a = u - X;
+        let worst = 0;
+        for (let c = 0; c < 2; c++) {
+          const spread = at(X, Y, c) * (1 - a) * (1 - b) + at(X + 1, Y, c) * a * (1 - b) + at(X, Y + 1, c) * (1 - a) * b + at(X + 1, Y + 1, c) * a * b;
+          worst = Math.max(worst, (Math.abs(spread - fine.data[(y * W + x) * 4 + c]) * scale) / 255);
+        }
+        if (worst <= tolerance) continue;
+        const key = `${(x / TILE) | 0},${(y / TILE) | 0}`, box = boxes.get(key);
+        if (box) { box[0] = Math.min(box[0], x); box[1] = Math.min(box[1], y); box[2] = Math.max(box[2], x); box[3] = Math.max(box[3], y); }
+        else boxes.set(key, [x, y, x, y]);
+      }
+    }
+    // A margin round each, so the full map meets the coarse one where they agree; then join any that overlap.
+    let list = [...boxes.values()].map(([x0, y0, x1, y1]) => [Math.max(0, x0 - 3), Math.max(0, y0 - 3), Math.min(W, x1 + 4), Math.min(H, y1 + 4)]);
+    for (let joined = true; joined;) {
+      joined = false;
+      outer: for (let i = 0; i < list.length; i++) for (let k = i + 1; k < list.length; k++) {
+        const p = list[i], q = list[k];
+        if (p[0] <= q[2] && q[0] <= p[2] && p[1] <= q[3] && q[1] <= p[3]) {
+          list[i] = [Math.min(p[0], q[0]), Math.min(p[1], q[1]), Math.max(p[2], q[2]), Math.max(p[3], q[3])];
+          list.splice(k, 1);
+          joined = true;
+          break outer;
+        }
+      }
+    }
+    return list.map(([x0, y0, x1, y1]) => {
+      const w = x1 - x0, h = y1 - y0, data = new Uint8ClampedArray(w * h * 4);
+      for (let y = 0; y < h; y++) data.set(fine.data.subarray(((y0 + y) * W + x0) * 4, ((y0 + y) * W + x1) * 4), y * w * 4);
+      return { x: x0, y: y0, width: w, height: h, data };
+    });
+  }
+
   /** Add the shape's lens to the page and return the backdrop filter that uses it. */
   function refract(name, f, o) {
-    const map = lensMap(f, o);
+    const step = Math.min(2, f.cell), scale = Math.abs(o.bend) * 2;
+    const map = lensMap(f, o, step);
+    const fine = step > 1 ? patches(f, lensMap(f, o), map, step, scale) : [];
     const filter = document.createElementNS(NS, 'filter');
     filter.setAttribute('id', `lens-${name}`);
     filter.setAttribute('x', '0');
     filter.setAttribute('y', '0');
-    filter.setAttribute('width', map.width);
-    filter.setAttribute('height', map.height);
+    filter.setAttribute('width', f.w + f.pad * 2);
+    filter.setAttribute('height', f.h + f.pad * 2);
     filter.setAttribute('filterUnits', 'userSpaceOnUse');
     filter.setAttribute('color-interpolation-filters', 'sRGB');
-    filter.innerHTML = `
-      <feImage href="${toCanvas(map).toDataURL()}" x="0" y="0" width="${map.width}" height="${map.height}" preserveAspectRatio="none" result="map"/>
-      <feDisplacementMap in="SourceGraphic" in2="map" scale="${Math.abs(o.bend) * 2}" xChannelSelector="R" yChannelSelector="G"/>`;
+    const image = (m, x, y, w, h, result) => `<feImage href="${toCanvas(m).toDataURL()}" x="${x}" y="${y}" width="${w}" height="${h}" preserveAspectRatio="none" result="${result}"/>`;
+    // The pieces are laid over the coarse map in one step, however many there are.
+    filter.innerHTML = [
+      image(map, 0, 0, map.width * step, map.height * step, 'coarse'),
+      ...fine.map((p, i) => image(p, p.x, p.y, p.width, p.height, `piece${i}`)),
+      fine.length ? `<feMerge result="map"><feMergeNode in="coarse"/>${fine.map((p, i) => `<feMergeNode in="piece${i}"/>`).join('')}</feMerge>` : '',
+      `<feDisplacementMap in="SourceGraphic" in2="${fine.length ? 'map' : 'coarse'}" scale="${scale}" xChannelSelector="R" yChannelSelector="G"/>`,
+    ].join('');
     L.$('.defs defs').appendChild(filter);
 
     return `url(#lens-${name}) blur(${o.blur || 0}px) saturate(1.3) brightness(1.08)`;
