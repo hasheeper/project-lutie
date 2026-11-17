@@ -278,7 +278,7 @@
     // A page opened straight from disk cannot load a module, and so has no model: say where to open it instead.
     const missing = location.protocol === 'file:'
       ? '空间模型未载入 · 本页是从磁盘直接打开的，请改从 http://localhost:4173/prototype/ 打开'
-      : '空间模型未载入 · 需经本地服务器打开本页';
+      : '空间模型未载入 · 请刷新页面重试（浏览器需支持 WebGL）';
     mapEl.innerHTML =
       '<header class="heading map__head"><h2 class="heading__title"><b>MAP</b><span>设施空间视图</span></h2>' +
       '<p class="heading__sub">NORRENS BIOLOGICAL INSTITUTE · INDIVIDUAL PROJECT<span class="map__total"></span></p></header>' +
